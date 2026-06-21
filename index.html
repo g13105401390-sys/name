@@ -18,8 +18,19 @@
   }
   #question h1 {
     font-size: 5vw;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
     text-shadow: 0 0 10px rgba(255,255,255,0.3);
+  }
+  /* 显示上次选择的徽章 */
+  #badge {
+    margin-bottom: 30px;
+    font-size: 2vw;
+    color: #ffd700;
+    background: rgba(255,215,0,0.15);
+    padding: 10px 30px;
+    border-radius: 30px;
+    display: none;
+    border: 1px solid #ffd700;
   }
   #question .btn-group {
     display: flex;
@@ -48,31 +59,33 @@
     color: white;
   }
 
-  /* ===== 第二页：浅色背景 + 彩虹文字 + 表情 ===== */
+  /* ===== 第二页：浅色背景 + 彩虹文字 + 延伸选项 ===== */
   #rainbow {
-    display: none;           /* 初始隐藏 */
+    display: none;
     margin: 0;
-    height: 100vh;
+    min-height: 100vh;
     justify-content: center;
     align-items: center;
-    background: #f5f5f5;    /* 浅色背景（网页自带风格） */
+    background: #f5f5f5;
     overflow: hidden;
-    flex-direction: column;  /* 让内容和表情垂直排列 */
+    flex-direction: column;
+    padding: 20px;
+    box-sizing: border-box;
   }
   #rainbow h1 {
-    font-size: 10vw;
+    font-size: 8vw;
     font-weight: bold;
     animation: rainbow 1s infinite;
     text-align: center;
     padding: 0 20px;
-    margin-bottom: 20px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.1); /* 轻微阴影增加可读性 */
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
   }
-  /* 表情包区域 */
   #emojis {
-    font-size: 6vw;
+    font-size: 5vw;
     letter-spacing: 1.5vw;
     animation: float 2s ease-in-out infinite;
+    margin-bottom: 20px;
   }
   @keyframes float {
     0% { transform: translateY(0); }
@@ -87,48 +100,144 @@
     80%  { color: pink; }
     100% { color: red; }
   }
+
+  /* 延伸选项区域 */
+  #extra-options {
+    margin-top: 20px;
+    text-align: center;
+    color: #333;
+    font-size: 2vw;
+    background: white;
+    padding: 25px 40px;
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+    max-width: 80%;
+  }
+  #extra-options p {
+    margin: 0 0 15px 0;
+    font-weight: bold;
+  }
+  .extra-btn-group {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .extra-btn-group button {
+    padding: 12px 30px;
+    border-radius: 30px;
+    border: none;
+    font-size: 1.5vw;
+    cursor: pointer;
+    font-weight: bold;
+    transition: transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
+  .extra-btn-group button:hover {
+    transform: scale(1.08);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  }
+  .btn-back {
+    margin-top: 25px;
+    padding: 12px 40px;
+    border: none;
+    border-radius: 30px;
+    background: #555;
+    color: white;
+    cursor: pointer;
+    font-size: 1.5vw;
+    transition: 0.3s;
+  }
+  .btn-back:hover {
+    background: #333;
+    transform: scale(1.05);
+  }
 </style>
 </head>
 <body>
 
-<!-- 第一页：问题和按钮 -->
+<!-- ========== 第一页：问题和按钮 ========== -->
 <div id="question">
   <h1>🤔 你觉得谷秉鸿帅吗？</h1>
+  
+  <!-- 显示上次选择的徽章（选了之后返回会显示） -->
+  <div id="badge">你上次选择了：<span id="badge-text"></span></div>
+
   <div class="btn-group">
     <button class="btn-very" onclick="choose('很帅')">🔥 很帅</button>
     <button class="btn-normal" onclick="choose('帅')">✨ 帅</button>
   </div>
 </div>
 
-<!-- 第二页：彩虹 + 表情 -->
+<!-- ========== 第二页：彩虹 + 延伸选项 ========== -->
 <div id="rainbow">
   <h1 id="text">谷秉鸿很帅！！！</h1>
   <div id="emojis">😂🤣😎🎉✨</div>
+
+  <!-- 延伸选项会由 JavaScript 动态生成到这里 -->
+  <div id="extra-options"></div>
+
+  <!-- 返回第一页重新选择 -->
+  <button class="btn-back" onclick="goBack()">🔙 重新选择</button>
 </div>
 
 <script>
+  // 记录上一次的选择
+  let lastChoice = '';
+
+  // ===== 核心函数：点击第一页的按钮 =====
   function choose(option) {
-    // 隐藏第一页
+    lastChoice = option; // 记住选择
+
+    // 隐藏第一页，显示第二页
     document.getElementById('question').style.display = 'none';
-    // 显示第二页
-    var rainbow = document.getElementById('rainbow');
+    const rainbow = document.getElementById('rainbow');
     rainbow.style.display = 'flex';
 
-    var text = document.getElementById('text');
-    var emojis = document.getElementById('emojis');
+    const text = document.getElementById('text');
+    const emojis = document.getElementById('emojis');
+    const extraDiv = document.getElementById('extra-options');
 
+    // 根据不同的选择，显示不同的内容和延伸选项
     if (option === '很帅') {
       text.innerHTML = '你很有眼光！👏';
       emojis.textContent = '😎🔥🤩💯👀';
+      extraDiv.innerHTML = `
+        <p>🌟 延伸选择：你觉得他帅到什么程度？</p>
+        <div class="extra-btn-group">
+          <button style="background:#ff6b6b;color:white;" onclick="alert('💯 满分！直接出道！谷秉鸿就是顶流！🔥')">💯 帅到爆表</button>
+          <button style="background:#4ecdc4;color:white;" onclick="alert('🎨 简直是行走的艺术品！太养眼了！')">🎨 帅如画</button>
+        </div>
+      `;
     } else if (option === '帅') {
       text.innerHTML = '谢谢你，你也很帅！😄';
       emojis.textContent = '😊🙏✨🌟👏';
+      extraDiv.innerHTML = `
+        <p>💝 延伸选择：想对谷秉鸿说什么？</p>
+        <div class="extra-btn-group">
+          <button style="background:#ffd93d;color:#333;" onclick="alert('❤️ 收到你的喜欢啦！谷秉鸿比了个心！')">❤️ 好喜欢</button>
+          <button style="background:#6bcb77;color:white;" onclick="alert('🎯 一起加油，未来可期！冲鸭！')">🎯 加油</button>
+        </div>
+      `;
     }
 
-    // 保留点击页面弹出提示
+    // 保留点击页面弹出提示（无论点哪里都会弹）
     document.body.onclick = function() {
       alert("没错，谷秉鸿真的很帅！");
     };
+  }
+
+  // ===== 返回第一页 =====
+  function goBack() {
+    document.getElementById('rainbow').style.display = 'none';
+    document.getElementById('question').style.display = 'flex';
+
+    // 更新第一页的徽章，显示你上次选了什么
+    if (lastChoice) {
+      const badge = document.getElementById('badge');
+      badge.style.display = 'block';
+      document.getElementById('badge-text').innerText = lastChoice === '很帅' ? '🔥 很帅' : '✨ 帅';
+    }
   }
 </script>
 
